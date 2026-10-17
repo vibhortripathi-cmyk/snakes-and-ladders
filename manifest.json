@@ -1,0 +1,11 @@
+{
+  "name": "Dynamic Snake & Ladder",
+  "short_name": "SnakeLadder",
+  "description": "Dynamic 2-Player Snake and Ladder board game with randomized boards, sound effects, and AI mode.",
+  "start_url": "/snakes-and-ladders/",
+  "scope": "/snakes-and-ladders/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait"
+}
