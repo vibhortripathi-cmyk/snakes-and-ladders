@@ -12,13 +12,14 @@
   <style>
     html, body { 
       font-family: 'Inter', sans-serif; 
-      min-height: 100%;
+      height: 100dvh;
       width: 100vw;
       margin: 0;
       padding: 0;
+      overflow: hidden;
       touch-action: manipulation;
     }
-    .cell-number { font-size: 0.65rem; }
+    .cell-number { font-size: 0.6rem; }
     @media (min-width: 640px) {
       .cell-number { font-size: 0.75rem; }
     }
@@ -93,59 +94,72 @@
     .active-turn-ring-p2 {
       box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1), 0 0 16px rgba(6, 182, 212, 0.4);
     }
+    /* Dynamic board auto-scaler to fit tall displays like OnePlus 12 */
+    .responsive-board-wrapper {
+      width: min(88vw, 42dvh);
+      height: min(88vw, 42dvh);
+    }
+    @media (min-width: 1024px) {
+      .responsive-board-wrapper {
+        width: 440px;
+        height: 440px;
+      }
+    }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-start p-3 sm:p-6">
-  <header class="w-full max-w-4xl flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-800">
+<body class="bg-slate-900 text-slate-100 h-[100dvh] w-screen flex flex-col items-center justify-between p-2 overflow-hidden">
+  <!-- Header -->
+  <header class="w-full max-w-4xl flex items-center justify-between gap-1 pb-1.5 border-b border-slate-800 shrink-0">
     <div>
-      <h1 class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
+      <h1 class="text-base sm:text-xl font-bold bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent leading-tight">
         Dynamic Snake &amp; Ladder
       </h1>
-      <p class="text-xs text-slate-400">Step 3 — 2-Player Turn-Based Mode (Human vs Human or vs AI)</p>
+      <p class="text-[9px] sm:text-xs text-slate-400">Step 3 — 2-Player Turn-Based Mode</p>
     </div>
-    <div class="flex items-center gap-2 flex-wrap">
-      <!-- Game Mode Selector -->
-      <div class="inline-flex rounded-lg bg-slate-800 p-0.5 border border-slate-700 text-xs">
-        <button id="modePvpBtn" class="px-2.5 py-1 rounded-md font-medium transition bg-indigo-600 text-white">
-          👥 2P Local
+    <div class="flex items-center gap-1 flex-wrap justify-end">
+      <div class="inline-flex rounded-lg bg-slate-800 p-0.5 border border-slate-700 text-[10px]">
+        <button id="modePvpBtn" class="px-1.5 py-0.5 rounded-md font-medium transition bg-indigo-600 text-white">
+          👥 2P
         </button>
-        <button id="modeAiBtn" class="px-2.5 py-1 rounded-md font-medium transition text-slate-400 hover:text-white">
-          🤖 vs AI
+        <button id="modeAiBtn" class="px-1.5 py-0.5 rounded-md font-medium transition text-slate-400 hover:text-white">
+          🤖 AI
         </button>
       </div>
 
-      <button id="soundToggle" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 border border-slate-700 flex items-center gap-1 transition">
-        <span id="soundIcon">🔊</span> <span id="soundText" class="hidden sm:inline">Sound ON</span>
+      <button id="soundToggle" class="px-1.5 py-0.5 rounded-lg bg-slate-800 text-[10px] text-slate-300 border border-slate-700 flex items-center gap-0.5">
+        <span id="soundIcon">🔊</span>
       </button>
-      <button id="randomizeBtn" class="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow transition flex items-center gap-1">
-        <span>🎲</span> Randomize Board
+      <button id="randomizeBtn" class="px-1.5 py-0.5 rounded-lg bg-indigo-600 text-[10px] font-semibold text-white shadow">
+        🎲 Swap
       </button>
-      <button id="resetBtn" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 border border-slate-700 transition">
+      <button id="resetBtn" class="px-1.5 py-0.5 rounded-lg bg-slate-800 text-[10px] text-slate-300 border border-slate-700">
         Reset
       </button>
     </div>
   </header>
 
-  <main class="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-    <!-- Board Section -->
-    <div class="lg:col-span-8 flex flex-col items-center">
-      <!-- Active Turn Header Banner -->
-      <div id="turnBanner" class="w-full max-w-[420px] mb-2 px-3 py-1.5 rounded-xl border flex items-center justify-between text-xs font-semibold transition-all duration-300 bg-amber-950/40 border-amber-500/50 text-amber-200">
-        <div class="flex items-center gap-2">
-          <span id="turnPawnIcon" class="w-4 h-4 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black inline-flex items-center justify-center">1</span>
-          <span id="turnBannerText">Player 1's Turn (Amber)</span>
+  <!-- Main Game Area -->
+  <main class="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-2 items-center flex-1 min-h-0 py-1">
+    <!-- Board Container -->
+    <div class="lg:col-span-8 flex flex-col items-center justify-center shrink-0">
+      <!-- Turn Banner -->
+      <div id="turnBanner" class="responsive-board-wrapper !h-auto mb-1 px-2 py-0.5 rounded-lg border flex items-center justify-between text-[10px] sm:text-xs font-semibold bg-amber-950/40 border-amber-500/50 text-amber-200 shrink-0">
+        <div class="flex items-center gap-1.5">
+          <span id="turnPawnIcon" class="w-3.5 h-3.5 rounded-full bg-amber-400 text-slate-950 text-[9px] font-black inline-flex items-center justify-center">1</span>
+          <span id="turnBannerText">P1's Turn (Amber)</span>
         </div>
-        <span id="turnSubText" class="text-[11px] opacity-75 font-normal">Click Roll Dice</span>
+        <span id="turnSubText" class="text-[9px] opacity-75 font-normal">Roll Dice</span>
       </div>
 
-      <div id="boardContainer" class="relative w-full max-w-[420px] aspect-square bg-slate-950 p-2 sm:p-3 rounded-2xl shadow-2xl border border-slate-800/80 select-none">
+      <!-- Square Board -->
+      <div id="boardContainer" class="relative responsive-board-wrapper bg-slate-950 p-1 sm:p-2 rounded-xl shadow-2xl border border-slate-800/80 select-none flex items-center justify-center shrink-0">
         <!-- 10x10 Grid -->
-        <div id="board" class="grid grid-cols-10 grid-rows-10 gap-1 w-full h-full rounded-xl overflow-hidden bg-slate-900 p-1">
+        <div id="board" class="grid grid-cols-10 grid-rows-10 gap-0.5 w-full h-full rounded-lg overflow-hidden bg-slate-900 p-0.5">
           <!-- Cells will be generated here -->
         </div>
 
-        <!-- Dynamic SVG Overlay for Visual Snakes and Ladders -->
-        <svg id="boardSvg" class="absolute inset-0 w-full h-full pointer-events-none p-2 sm:p-3" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+        <!-- SVG Snakes & Ladders -->
+        <svg id="boardSvg" class="absolute inset-0 w-full h-full pointer-events-none p-1 sm:p-2" viewBox="0 0 1000 1000" preserveAspectRatio="none">
           <defs>
             <filter id="glowGreen" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="4" result="blur" />
@@ -155,119 +169,109 @@
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
-            <pattern id="snakeSkin" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-              <rect width="10" height="20" fill="#dc2626"/>
-              <rect x="10" width="10" height="20" fill="#b91c1c"/>
-              <circle cx="10" cy="10" r="3" fill="#f87171" opacity="0.6"/>
-            </pattern>
           </defs>
           <g id="laddersGroup"></g>
           <g id="snakesGroup"></g>
-          <g id="activeHighlightGroup"></g>
         </svg>
 
-        <!-- Floating Animated Token for smooth trajectory animations -->
-        <div id="flyingToken" class="absolute w-8 h-8 -ml-4 -mt-4 rounded-full bg-amber-400 text-slate-950 text-base font-black shadow-xl shadow-amber-400/80 flex items-center justify-center pointer-events-none transition-all ease-out duration-700 hidden z-30 border-2 border-white">
+        <!-- Animated Token -->
+        <div id="flyingToken" class="absolute w-6 h-6 -ml-3 -mt-3 sm:w-8 sm:h-8 sm:-ml-4 sm:-mt-4 rounded-full bg-amber-400 text-slate-950 text-xs sm:text-base font-black shadow-xl flex items-center justify-center pointer-events-none transition-all ease-out duration-700 hidden z-30 border-2 border-white">
           ♟
         </div>
 
-        <!-- Action Banner Toast Overlay -->
-        <div id="actionToast" class="absolute top-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl text-xs font-bold shadow-2xl backdrop-blur-md transition-all duration-300 opacity-0 pointer-events-none z-40 border flex items-center gap-2 max-w-[90%]">
-          <span id="toastIcon" class="text-lg">🪜</span>
+        <!-- Action Toast -->
+        <div id="actionToast" class="absolute top-2 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg text-[10px] font-bold shadow-2xl backdrop-blur-md transition-all duration-300 opacity-0 pointer-events-none z-40 border flex items-center gap-1 max-w-[90%]">
+          <span id="toastIcon" class="text-xs">🪜</span>
           <span id="toastText">Climbing ladder!</span>
         </div>
       </div>
       
-      <!-- Board Legend -->
-      <div class="flex items-center justify-center gap-4 mt-3 text-xs text-slate-400 flex-wrap">
-        <div class="flex items-center gap-1.5">
-          <span class="w-3 h-3 rounded bg-emerald-500/30 border border-emerald-400 inline-block"></span>
-          <span>🪜 Ladder (Climb Up)</span>
+      <!-- Legend -->
+      <div class="flex items-center justify-center gap-2 mt-1 text-[9px] sm:text-xs text-slate-400 shrink-0">
+        <div class="flex items-center gap-0.5">
+          <span class="w-2 h-2 rounded bg-emerald-500/30 border border-emerald-400 inline-block"></span>
+          <span>🪜 Ladder</span>
         </div>
-        <div class="flex items-center gap-1.5">
-          <span class="w-3 h-3 rounded bg-rose-500/30 border border-rose-400 inline-block"></span>
-          <span>🐍 Snake (Slide Down)</span>
+        <div class="flex items-center gap-0.5">
+          <span class="w-2 h-2 rounded bg-rose-500/30 border border-rose-400 inline-block"></span>
+          <span>🐍 Snake</span>
         </div>
-        <div class="flex items-center gap-1.5">
-          <span class="w-3 h-3 rounded-full bg-amber-400 inline-block shadow-sm"></span>
-          <span>Player 1 (P1)</span>
+        <div class="flex items-center gap-0.5">
+          <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+          <span>P1</span>
         </div>
-        <div class="flex items-center gap-1.5">
-          <span class="w-3 h-3 rounded-full bg-cyan-400 inline-block shadow-sm"></span>
-          <span id="legendP2Text">Player 2 (P2)</span>
+        <div class="flex items-center gap-0.5">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 inline-block"></span>
+          <span id="legendP2Text">P2</span>
         </div>
       </div>
     </div>
 
-    <!-- Controls & Info Panel -->
-    <div class="lg:col-span-4 flex flex-col gap-3 w-full">
-      <!-- Player 1 & 2 Dual Scorecard Grid -->
-      <div class="grid grid-cols-2 gap-2">
-        <!-- Player 1 Card -->
-        <div id="player1Card" class="bg-slate-800/90 rounded-xl p-3 border-2 border-amber-400/80 transition-all duration-200 active-turn-ring">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-[11px] font-bold text-amber-300 flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> P1 (Amber)
+    <!-- Controls Panel -->
+    <div class="lg:col-span-4 flex flex-col gap-1.5 w-full responsive-board-wrapper lg:!w-full !h-auto shrink-0">
+      <!-- Player Cards -->
+      <div class="grid grid-cols-2 gap-1.5">
+        <div id="player1Card" class="bg-slate-800/90 rounded-lg p-1.5 border-2 border-amber-400/80 transition-all duration-200 active-turn-ring">
+          <div class="flex items-center justify-between mb-0.5">
+            <span class="text-[9px] font-bold text-amber-300 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> P1
             </span>
-            <span id="p1Badge" class="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
+            <span id="p1Badge" class="px-1 py-0.2 text-[8px] font-bold rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
               Tile 1
             </span>
-            <span id="playerBadge" class="hidden">Tile 1</span>
           </div>
-          <div class="flex items-center gap-2">
-            <div id="tokenAvatar" class="w-9 h-9 rounded-lg bg-amber-400 text-slate-950 font-black text-sm flex items-center justify-center shadow">
+          <div class="flex items-center gap-1">
+            <div id="tokenAvatar" class="w-6 h-6 rounded bg-amber-400 text-slate-950 font-black text-[10px] flex items-center justify-center shadow shrink-0">
               ♟1
             </div>
             <div>
-              <div class="text-xs font-bold text-white">Player 1</div>
-              <div id="p1Subtext" class="text-[10px] text-slate-400">99 to win</div>
-              <div id="positionSubtext" class="hidden">Need 99 tiles to win</div>
+              <div class="text-[10px] font-bold text-white">Player 1</div>
+              <div id="p1Subtext" class="text-[8px] text-slate-400">99 to win</div>
             </div>
           </div>
         </div>
 
-        <!-- Player 2 Card -->
-        <div id="player2Card" class="bg-slate-800/50 rounded-xl p-3 border-2 border-transparent transition-all duration-200 opacity-60">
-          <div class="flex items-center justify-between mb-1.5">
-            <span id="p2TitleTag" class="text-[11px] font-bold text-cyan-300 flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-cyan-400"></span> P2 (Cyan)
+        <div id="player2Card" class="bg-slate-800/50 rounded-lg p-1.5 border-2 border-transparent transition-all duration-200 opacity-60">
+          <div class="flex items-center justify-between mb-0.5">
+            <span id="p2TitleTag" class="text-[9px] font-bold text-cyan-300 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> P2
             </span>
-            <span id="p2Badge" class="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/30">
+            <span id="p2Badge" class="px-1 py-0.2 text-[8px] font-bold rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/30">
               Tile 1
             </span>
           </div>
-          <div class="flex items-center gap-2">
-            <div id="p2AvatarBox" class="w-9 h-9 rounded-lg bg-cyan-400 text-slate-950 font-black text-sm flex items-center justify-center shadow">
+          <div class="flex items-center gap-1">
+            <div id="p2AvatarBox" class="w-6 h-6 rounded bg-cyan-400 text-slate-950 font-black text-[10px] flex items-center justify-center shadow shrink-0">
               ♟2
             </div>
             <div>
-              <div id="p2NameText" class="text-xs font-bold text-white">Player 2</div>
-              <div id="p2Subtext" class="text-[10px] text-slate-400">99 to win</div>
+              <div id="p2NameText" class="text-[10px] font-bold text-white">Player 2</div>
+              <div id="p2Subtext" class="text-[8px] text-slate-400">99 to win</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Dice Roll Action Zone -->
-      <div class="bg-slate-800/80 rounded-xl p-4 border border-slate-700 shadow-lg flex flex-col items-center">
-        <div id="diceFace" class="w-16 h-16 rounded-2xl bg-gradient-to-br from-white to-slate-200 text-slate-900 flex items-center justify-center text-4xl font-black shadow-lg cursor-pointer select-none transition border-2 border-slate-300 mb-3">
+      <!-- Dice Box -->
+      <div class="bg-slate-800/80 rounded-lg p-1.5 border border-slate-700 shadow flex items-center justify-between gap-2">
+        <div id="diceFace" class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-gradient-to-br from-white to-slate-200 text-slate-900 flex items-center justify-center text-xl font-black shadow cursor-pointer select-none border border-slate-300 shrink-0">
           ⚀
         </div>
-        <button id="rollBtn" class="w-full py-2.5 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 shadow-lg shadow-amber-500/20 transition active:scale-[0.98]">
+        <button id="rollBtn" class="flex-1 py-1.5 px-2 rounded-lg font-bold text-xs bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 shadow transition active:scale-[0.98]">
           Roll Dice
         </button>
       </div>
 
-      <!-- Live Event Log -->
-      <div class="bg-slate-800/80 rounded-xl p-3 border border-slate-700 shadow-lg flex-1 flex flex-col">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs uppercase tracking-wider font-semibold text-slate-400">Match Events</span>
-          <div class="flex items-center gap-2 text-xs text-slate-400">
+      <!-- Event Log -->
+      <div class="bg-slate-800/80 rounded-lg p-1.5 border border-slate-700 shadow flex flex-col min-h-0">
+        <div class="flex items-center justify-between mb-0.5">
+          <span class="text-[9px] uppercase tracking-wider font-semibold text-slate-400">Match Events</span>
+          <div class="flex items-center gap-1 text-[8px] text-slate-400">
             <span id="turnCounter">Round 1</span>
             <span id="totalRolls" class="opacity-75">· 0 Rolls</span>
           </div>
         </div>
-        <div id="logContainer" class="bg-slate-950/80 rounded-lg p-2.5 h-36 overflow-y-auto space-y-1 text-xs font-mono border border-slate-900">
+        <div id="logContainer" class="bg-slate-950/80 rounded p-1.5 h-12 sm:h-16 overflow-y-auto space-y-0.5 text-[9px] font-mono border border-slate-900">
           <div class="text-slate-500 italic">Game ready. Player 1, roll the dice!</div>
         </div>
       </div>
@@ -287,20 +291,16 @@
   </div>
 
   <script>
-    // --- Audio System (Web Audio API) ---
+    // Audio System
     let soundEnabled = true;
     let audioCtx = null;
 
     function initAudio() {
       if (!audioCtx) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (AudioContext) {
-          audioCtx = new AudioContext();
-        }
+        if (AudioContext) audioCtx = new AudioContext();
       }
-      if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     }
 
     function playBeep(freq, type, duration, vol = 0.08) {
@@ -318,9 +318,7 @@
         gain.connect(audioCtx.destination);
         osc.start();
         osc.stop(audioCtx.currentTime + duration);
-      } catch (e) {
-        // Fallback safe
-      }
+      } catch (e) {}
     }
 
     function playRollSound() {
@@ -329,13 +327,11 @@
     }
 
     function playStepSound(playerIdx) {
-      const baseFreq = playerIdx === 0 ? 520 : 640;
-      playBeep(baseFreq, 'sine', 0.09);
+      playBeep(playerIdx === 0 ? 520 : 640, 'sine', 0.09);
     }
 
     function playLadderSound() {
-      const notes = [392, 523, 659, 784, 1046];
-      notes.forEach((freq, idx) => {
+      [392, 523, 659, 784, 1046].forEach((freq, idx) => {
         setTimeout(() => playBeep(freq, 'triangle', 0.22, 0.1), idx * 100);
       });
     }
@@ -348,15 +344,14 @@
     }
 
     function playWinSound() {
-      const notes = [523, 659, 783, 1046, 1318];
-      notes.forEach((freq, idx) => {
+      [523, 659, 783, 1046, 1318].forEach((freq, idx) => {
         setTimeout(() => playBeep(freq, 'triangle', 0.35, 0.12), idx * 120);
       });
     }
 
-    // --- 2-Player Game State ---
-    let gameMode = 'pvp'; // 'pvp' (Pass & play) or 'ai' (vs Computer)
-    let currentTurn = 0; // 0 for Player 1, 1 for Player 2
+    // Game State
+    let gameMode = 'pvp';
+    let currentTurn = 0;
     let roundCount = 1;
     let totalRollsCount = 0;
     let isMoving = false;
@@ -366,13 +361,11 @@
       { id: 2, name: 'Player 2', pos: 1, color: 'cyan', bgHex: '#06b6d4', rolls: 0 }
     ];
 
-    // Default Snakes and Ladders
     let ladders = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91 };
     let snakes = { 17: 7, 54: 34, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78 };
-
     const diceSymbols = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
-    // DOM Elements
+    // Elements
     const boardEl = document.getElementById('board');
     const boardContainer = document.getElementById('boardContainer');
     const laddersGroup = document.getElementById('laddersGroup');
@@ -387,7 +380,6 @@
     const randomizeBtn = document.getElementById('randomizeBtn');
     const soundToggle = document.getElementById('soundToggle');
     const soundIcon = document.getElementById('soundIcon');
-    const soundText = document.getElementById('soundText');
     const diceFace = document.getElementById('diceFace');
     const logContainer = document.getElementById('logContainer');
     const turnCounter = document.getElementById('turnCounter');
@@ -404,10 +396,8 @@
     const player2Card = document.getElementById('player2Card');
     const p1Badge = document.getElementById('p1Badge');
     const p2Badge = document.getElementById('p2Badge');
-    const playerBadge = document.getElementById('playerBadge');
     const p1Subtext = document.getElementById('p1Subtext');
     const p2Subtext = document.getElementById('p2Subtext');
-    const positionSubtext = document.getElementById('positionSubtext');
     const p2TitleTag = document.getElementById('p2TitleTag');
     const p2NameText = document.getElementById('p2NameText');
     const p2AvatarBox = document.getElementById('p2AvatarBox');
@@ -418,7 +408,6 @@
     const victoryMessage = document.getElementById('victoryMessage');
     const modalPlayAgainBtn = document.getElementById('modalPlayAgainBtn');
 
-    // SVG Coordinate Helper
     function getCellSvgCoords(cellNum) {
       const idx = cellNum - 1;
       const rowFromBottom = Math.floor(idx / 10);
@@ -428,7 +417,6 @@
       return { x: (col * 100) + 50, y: (row * 100) + 50 };
     }
 
-    // DOM Pixel Coordinate Helper
     function getCellDomCoords(cellNum) {
       const cellEl = document.getElementById(`cell-${cellNum}`);
       if (!cellEl || !boardContainer) return { x: 0, y: 0 };
@@ -440,12 +428,10 @@
       };
     }
 
-    // Draw visual ladders and snakes onto SVG
     function drawBoardSvgs() {
       laddersGroup.innerHTML = '';
       snakesGroup.innerHTML = '';
 
-      // Draw Ladders
       Object.keys(ladders).forEach(startKey => {
         const bottom = parseInt(startKey, 10);
         const top = ladders[bottom];
@@ -479,8 +465,7 @@
         rightRail.setAttribute('stroke-linecap', 'round');
         g.appendChild(rightRail);
 
-        const rungSpacing = 32;
-        const numRungs = Math.floor(len / rungSpacing);
+        const numRungs = Math.floor(len / 32);
         for (let i = 1; i <= numRungs; i++) {
           const t = i / (numRungs + 1);
           const cx = p1.x + dx * t;
@@ -493,16 +478,9 @@
           g.appendChild(rung);
         }
 
-        const baseCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        baseCircle.setAttribute('cx', p1.x); baseCircle.setAttribute('cy', p1.y);
-        baseCircle.setAttribute('r', '8'); baseCircle.setAttribute('fill', '#059669');
-        baseCircle.setAttribute('stroke', '#a7f3d0'); baseCircle.setAttribute('stroke-width', '2');
-        g.appendChild(baseCircle);
-
         laddersGroup.appendChild(g);
       });
 
-      // Draw Snakes
       Object.keys(snakes).forEach(headKey => {
         const head = parseInt(headKey, 10);
         const tail = snakes[head];
@@ -546,36 +524,10 @@
         bodyInner.setAttribute('stroke-dasharray', '8 6');
         g.appendChild(bodyInner);
 
-        const snakeHeadCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        snakeHeadCircle.setAttribute('cx', p1.x); snakeHeadCircle.setAttribute('cy', p1.y);
-        snakeHeadCircle.setAttribute('r', '15'); snakeHeadCircle.setAttribute('fill', '#be123c');
-        snakeHeadCircle.setAttribute('stroke', '#fda4af'); snakeHeadCircle.setAttribute('stroke-width', '3');
-        g.appendChild(snakeHeadCircle);
-
-        const eyeAngle = Math.atan2(dy, dx);
-        const eyeOffset = 6;
-        const eye1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        eye1.setAttribute('cx', p1.x + Math.cos(eyeAngle + 1.2) * eyeOffset);
-        eye1.setAttribute('cy', p1.y + Math.sin(eyeAngle + 1.2) * eyeOffset);
-        eye1.setAttribute('r', '2.5'); eye1.setAttribute('fill', '#fef08a');
-        g.appendChild(eye1);
-
-        const eye2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        eye2.setAttribute('cx', p1.x + Math.cos(eyeAngle - 1.2) * eyeOffset);
-        eye2.setAttribute('cy', p1.y + Math.sin(eyeAngle - 1.2) * eyeOffset);
-        eye2.setAttribute('r', '2.5'); eye2.setAttribute('fill', '#fef08a');
-        g.appendChild(eye2);
-
-        const tailCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        tailCircle.setAttribute('cx', p2.x); tailCircle.setAttribute('cy', p2.y);
-        tailCircle.setAttribute('r', '5'); tailCircle.setAttribute('fill', '#9f1239');
-        g.appendChild(tailCircle);
-
         snakesGroup.appendChild(g);
       });
     }
 
-    // Render the 100 tiles
     function renderBoard() {
       boardEl.innerHTML = '';
       
@@ -586,10 +538,9 @@
 
           const cell = document.createElement('div');
           cell.id = `cell-${cellNum}`;
-          cell.className = 'relative flex flex-col justify-between p-1 rounded transition duration-200';
+          cell.className = 'relative flex flex-col justify-between p-0.5 rounded transition duration-200 overflow-hidden';
 
-          const altColor = (row + col) % 2 === 0 ? 'bg-slate-800/90' : 'bg-slate-800/50';
-          cell.classList.add(altColor);
+          cell.classList.add((row + col) % 2 === 0 ? 'bg-slate-800/90' : 'bg-slate-800/50');
 
           const numSpan = document.createElement('span');
           numSpan.className = 'cell-number font-semibold text-slate-400 select-none';
@@ -599,8 +550,7 @@
           if (ladders[cellNum]) {
             cell.classList.add('border', 'border-emerald-500/60', 'bg-emerald-950/40');
             const iconSpan = document.createElement('div');
-            iconSpan.className = 'absolute top-1 right-1 text-[10px] text-emerald-400 font-bold select-none';
-            iconSpan.title = `Ladder to ${ladders[cellNum]}`;
+            iconSpan.className = 'absolute top-0.5 right-0.5 text-[7px] text-emerald-400 font-bold select-none';
             iconSpan.textContent = `🪜${ladders[cellNum]}`;
             cell.appendChild(iconSpan);
           }
@@ -608,8 +558,7 @@
           if (snakes[cellNum]) {
             cell.classList.add('border', 'border-rose-500/60', 'bg-rose-950/40');
             const iconSpan = document.createElement('div');
-            iconSpan.className = 'absolute top-1 right-1 text-[10px] text-rose-400 font-bold select-none';
-            iconSpan.title = `Snake down to ${snakes[cellNum]}`;
+            iconSpan.className = 'absolute top-0.5 right-0.5 text-[7px] text-rose-400 font-bold select-none';
             iconSpan.textContent = `🐍${snakes[cellNum]}`;
             cell.appendChild(iconSpan);
           }
@@ -617,14 +566,14 @@
           if (cellNum === 100) {
             cell.classList.add('border-2', 'border-amber-400', 'bg-amber-950/30');
             const star = document.createElement('span');
-            star.className = 'absolute inset-0 flex items-center justify-center text-xs font-bold text-amber-300 opacity-30 select-none';
+            star.className = 'absolute inset-0 flex items-center justify-center text-[9px] font-bold text-amber-300 opacity-30 select-none';
             star.textContent = 'WIN';
             cell.appendChild(star);
           }
 
           const tokenSlot = document.createElement('div');
           tokenSlot.id = `token-slot-${cellNum}`;
-          tokenSlot.className = 'flex items-center justify-center gap-0.5 h-4 sm:h-5';
+          tokenSlot.className = 'flex items-center justify-center gap-0.5 h-3';
           cell.appendChild(tokenSlot);
 
           boardEl.appendChild(cell);
@@ -636,7 +585,6 @@
       updateTurnUI();
     }
 
-    // Refresh token positions on board
     function updatePlayerVisuals() {
       for (let i = 1; i <= 100; i++) {
         const slot = document.getElementById(`token-slot-${i}`);
@@ -649,31 +597,20 @@
         const slot = document.getElementById(`token-slot-${p.pos}`);
         if (slot) {
           const token = document.createElement('span');
-          if (idx === 0) {
-            token.className = 'token-bounce inline-flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-400 text-slate-950 text-[10px] sm:text-xs font-black shadow-md shadow-amber-400/60 select-none';
-            token.textContent = '1';
-          } else {
-            token.className = 'token-bounce inline-flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-cyan-400 text-slate-950 text-[10px] sm:text-xs font-black shadow-md shadow-cyan-400/60 select-none';
-            token.textContent = '2';
-          }
+          token.className = `token-bounce inline-flex items-center justify-center w-2.5 h-2.5 sm:w-4 sm:h-4 rounded-full ${idx === 0 ? 'bg-amber-400' : 'bg-cyan-400'} text-slate-950 text-[7px] sm:text-[10px] font-black shadow select-none`;
+          token.textContent = p.id;
           slot.appendChild(token);
         }
       });
 
       const activeCell = document.getElementById(`cell-${players[currentTurn].pos}`);
       if (activeCell) {
-        if (currentTurn === 0) {
-          activeCell.classList.add('ring-2', 'ring-amber-400', 'ring-inset');
-        } else {
-          activeCell.classList.add('ring-2', 'ring-cyan-400', 'ring-inset');
-        }
+        activeCell.classList.add('ring-2', currentTurn === 0 ? 'ring-amber-400' : 'ring-cyan-400', 'ring-inset');
       }
 
       p1Badge.textContent = `Tile ${players[0].pos}`;
-      playerBadge.textContent = `Tile ${players[currentTurn].pos}`;
       const rem1 = 100 - players[0].pos;
       p1Subtext.textContent = rem1 === 0 ? 'Goal!' : `${rem1} to win`;
-      positionSubtext.textContent = `Need ${rem1} tiles to win`;
 
       p2Badge.textContent = `Tile ${players[1].pos}`;
       const rem2 = 100 - players[1].pos;
@@ -683,7 +620,6 @@
       totalRollsEl.textContent = `· ${totalRollsCount} Roll${totalRollsCount === 1 ? '' : 's'}`;
     }
 
-    // Update Turn Indicator and Card Highlights
     function updateTurnUI() {
       const activeP = players[currentTurn];
       const isP1 = (currentTurn === 0);
@@ -694,13 +630,13 @@
         player2Card.classList.remove('active-turn-ring-p2', 'border-cyan-400/80', 'bg-slate-800/90');
         player2Card.classList.add('opacity-60', 'border-transparent', 'bg-slate-800/50');
 
-        turnBanner.className = 'w-full max-w-[420px] mb-2 px-3 py-1.5 rounded-xl border flex items-center justify-between text-xs font-semibold transition-all duration-300 bg-amber-950/40 border-amber-500/50 text-amber-200';
-        turnPawnIcon.className = 'w-4 h-4 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black inline-flex items-center justify-center';
+        turnBanner.className = 'responsive-board-wrapper !h-auto mb-1 px-2 py-0.5 rounded-lg border flex items-center justify-between text-[10px] sm:text-xs font-semibold bg-amber-950/40 border-amber-500/50 text-amber-200 shrink-0';
+        turnPawnIcon.className = 'w-3.5 h-3.5 rounded-full bg-amber-400 text-slate-950 text-[9px] font-black inline-flex items-center justify-center';
         turnPawnIcon.textContent = '1';
-        turnBannerText.textContent = "Player 1's Turn (Amber)";
-        turnSubText.textContent = 'Click Roll Dice';
+        turnBannerText.textContent = "P1's Turn (Amber)";
+        turnSubText.textContent = 'Roll Dice';
 
-        rollBtn.className = 'w-full py-2.5 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 shadow-lg shadow-amber-500/20 transition active:scale-[0.98]';
+        rollBtn.className = 'flex-1 py-1.5 px-2 rounded-lg font-bold text-xs bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 shadow transition active:scale-[0.98]';
         rollBtn.textContent = 'Roll Dice (Player 1)';
       } else {
         player2Card.classList.add('active-turn-ring-p2', 'border-cyan-400/80', 'bg-slate-800/90');
@@ -708,103 +644,64 @@
         player1Card.classList.remove('active-turn-ring', 'border-amber-400/80', 'bg-slate-800/90');
         player1Card.classList.add('opacity-60', 'border-transparent', 'bg-slate-800/50');
 
-        turnBanner.className = 'w-full max-w-[420px] mb-2 px-3 py-1.5 rounded-xl border flex items-center justify-between text-xs font-semibold transition-all duration-300 bg-cyan-950/40 border-cyan-500/50 text-cyan-200';
-        turnPawnIcon.className = 'w-4 h-4 rounded-full bg-cyan-400 text-slate-950 text-[10px] font-black inline-flex items-center justify-center';
+        turnBanner.className = 'responsive-board-wrapper !h-auto mb-1 px-2 py-0.5 rounded-lg border flex items-center justify-between text-[10px] sm:text-xs font-semibold bg-cyan-950/40 border-cyan-500/50 text-cyan-200 shrink-0';
+        turnPawnIcon.className = 'w-3.5 h-3.5 rounded-full bg-cyan-400 text-slate-950 text-[9px] font-black inline-flex items-center justify-center';
         turnPawnIcon.textContent = '2';
-        turnBannerText.textContent = `${activeP.name}'s Turn (Cyan)`;
-        turnSubText.textContent = (gameMode === 'ai') ? 'AI thinking...' : 'Click Roll Dice';
+        turnBannerText.textContent = `${activeP.name}'s Turn`;
+        turnSubText.textContent = (gameMode === 'ai') ? 'AI thinking...' : 'Roll Dice';
 
-        rollBtn.className = 'w-full py-2.5 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 shadow-lg shadow-cyan-500/20 transition active:scale-[0.98]';
-        rollBtn.textContent = (gameMode === 'ai') ? 'Roll Dice (Computer Rolling...)' : 'Roll Dice (Player 2)';
+        rollBtn.className = 'flex-1 py-1.5 px-2 rounded-lg font-bold text-xs bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 shadow transition active:scale-[0.98]';
+        rollBtn.textContent = (gameMode === 'ai') ? 'AI Rolling...' : 'Roll Dice (Player 2)';
       }
     }
 
     function showActionToast(type, text) {
       actionToast.classList.remove('opacity-0', 'bg-emerald-950/90', 'border-emerald-500/80', 'text-emerald-200', 'bg-rose-950/90', 'border-rose-500/80', 'text-rose-200');
-      if (type === 'ladder') {
-        actionToast.classList.add('bg-emerald-950/90', 'border-emerald-500/80', 'text-emerald-200');
-        toastIcon.textContent = '🪜';
-      } else {
-        actionToast.classList.add('bg-rose-950/90', 'border-rose-500/80', 'text-rose-200');
-        toastIcon.textContent = '🐍';
-      }
+      actionToast.classList.add(type === 'ladder' ? 'bg-emerald-950/90' : 'bg-rose-950/90');
+      toastIcon.textContent = type === 'ladder' ? '🪜' : '🐍';
       toastText.textContent = text;
       actionToast.classList.remove('opacity-0');
-
-      setTimeout(() => {
-        actionToast.classList.add('opacity-0');
-      }, 1500);
+      setTimeout(() => actionToast.classList.add('opacity-0'), 1500);
     }
 
     function addLog(text, type = 'normal') {
       const entry = document.createElement('div');
       entry.className = 'leading-relaxed';
-      if (type === 'ladder') {
-        entry.className += ' text-emerald-300 font-medium';
-      } else if (type === 'snake') {
-        entry.className += ' text-rose-300 font-medium';
-      } else if (type === 'win') {
-        entry.className += ' text-amber-300 font-bold';
-      } else if (type === 'turn') {
-        entry.className += ' text-slate-400 border-t border-slate-800/80 pt-1 mt-1';
-      } else {
-        entry.className += ' text-slate-300';
-      }
+      if (type === 'ladder') entry.className += ' text-emerald-300 font-medium';
+      else if (type === 'snake') entry.className += ' text-rose-300 font-medium';
+      else if (type === 'win') entry.className += ' text-amber-300 font-bold';
+      else entry.className += ' text-slate-300';
       entry.textContent = text;
       logContainer.appendChild(entry);
       logContainer.scrollTop = logContainer.scrollHeight;
     }
 
-    // --- ANIMATIONS ---
     async function animateLadderClimb(player, startTile, endTile) {
-      const ladderSvg = document.getElementById(`svg-ladder-${startTile}`);
-      const startCell = document.getElementById(`cell-${startTile}`);
-      const endCell = document.getElementById(`cell-${endTile}`);
-
-      if (ladderSvg) ladderSvg.classList.add('pulse-glow-ladder');
-      if (startCell) startCell.classList.add('cell-hit-ladder');
-      if (endCell) endCell.classList.add('cell-hit-ladder');
-
-      showActionToast('ladder', `${player.name} CLIMBING LADDER! Tile ${startTile} ➔ ${endTile}`);
+      showActionToast('ladder', `${player.name} CLIMBED! ${startTile} ➔ ${endTile}`);
       playLadderSound();
-      addLog(`🪜 ${player.name} climbed ladder from ${startTile} to ${endTile}!`, 'ladder');
+      addLog(`🪜 ${player.name} climbed ladder to ${endTile}!`, 'ladder');
 
       const p1 = getCellDomCoords(startTile);
       const p2 = getCellDomCoords(endTile);
 
       flyingToken.style.left = `${p1.x}px`;
       flyingToken.style.top = `${p1.y}px`;
-      const colorBg = player.id === 1 ? 'bg-amber-400' : 'bg-cyan-400';
-      flyingToken.className = `absolute w-8 h-8 -ml-4 -mt-4 rounded-full ${colorBg} text-slate-950 text-base font-black shadow-xl flex items-center justify-center pointer-events-none transition-all duration-800 ease-out z-30 border-2 border-white climb-leap`;
+      flyingToken.className = `absolute w-6 h-6 -ml-3 -mt-3 sm:w-8 sm:h-8 sm:-ml-4 sm:-mt-4 rounded-full ${player.id === 1 ? 'bg-amber-400' : 'bg-cyan-400'} text-slate-950 text-xs font-black shadow-xl flex items-center justify-center pointer-events-none transition-all duration-800 ease-out z-30 border-2 border-white climb-leap`;
       flyingToken.textContent = player.id;
       flyingToken.classList.remove('hidden');
 
       await new Promise(r => setTimeout(r, 100));
-
       flyingToken.style.left = `${p2.x}px`;
       flyingToken.style.top = `${p2.y}px`;
-
       await new Promise(r => setTimeout(r, 850));
 
       flyingToken.classList.add('hidden');
-      if (ladderSvg) ladderSvg.classList.remove('pulse-glow-ladder');
-      if (startCell) startCell.classList.remove('cell-hit-ladder');
-      if (endCell) endCell.classList.remove('cell-hit-ladder');
-
       player.pos = endTile;
       updatePlayerVisuals();
     }
 
     async function animateSnakeSlide(player, headTile, tailTile) {
-      const snakeSvg = document.getElementById(`svg-snake-${headTile}`);
-      const headCell = document.getElementById(`cell-${headTile}`);
-      const tailCell = document.getElementById(`cell-${tailTile}`);
-
-      if (snakeSvg) snakeSvg.classList.add('pulse-glow-snake');
-      if (headCell) headCell.classList.add('cell-hit-snake');
-      if (tailCell) tailCell.classList.add('cell-hit-snake');
-
-      showActionToast('snake', `${player.name} BITTEN BY SNAKE! ${headTile} ➔ ${tailTile}`);
+      showActionToast('snake', `${player.name} BITTEN! ${headTile} ➔ ${tailTile}`);
       playSnakeSound();
       addLog(`🐍 ${player.name} bitten by snake at ${headTile}! Slipped to ${tailTile}.`, 'snake');
 
@@ -813,36 +710,26 @@
 
       flyingToken.style.left = `${p1.x}px`;
       flyingToken.style.top = `${p1.y}px`;
-      const colorBg = player.id === 1 ? 'bg-amber-400' : 'bg-cyan-400';
-      flyingToken.className = `absolute w-8 h-8 -ml-4 -mt-4 rounded-full ${colorBg} text-slate-950 text-base font-black shadow-xl flex items-center justify-center pointer-events-none transition-all duration-900 ease-in-out z-30 border-2 border-white slither-slide`;
+      flyingToken.className = `absolute w-6 h-6 -ml-3 -mt-3 sm:w-8 sm:h-8 sm:-ml-4 sm:-mt-4 rounded-full ${player.id === 1 ? 'bg-amber-400' : 'bg-cyan-400'} text-slate-950 text-xs font-black shadow-xl flex items-center justify-center pointer-events-none transition-all duration-900 ease-in-out z-30 border-2 border-white slither-slide`;
       flyingToken.textContent = player.id;
       flyingToken.classList.remove('hidden');
 
       await new Promise(r => setTimeout(r, 120));
-
       flyingToken.style.left = `${p2.x}px`;
       flyingToken.style.top = `${p2.y}px`;
-
       await new Promise(r => setTimeout(r, 920));
 
       flyingToken.classList.add('hidden');
-      if (snakeSvg) snakeSvg.classList.remove('pulse-glow-snake');
-      if (headCell) headCell.classList.remove('cell-hit-snake');
-      if (tailCell) tailCell.classList.remove('cell-hit-snake');
-
       player.pos = tailTile;
       updatePlayerVisuals();
     }
 
-    // Turn Execution & Dice Roll
     async function executeTurn() {
       if (isMoving || players[0].pos >= 100 || players[1].pos >= 100) return;
       isMoving = true;
       rollBtn.disabled = true;
-      rollBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
       const activeP = players[currentTurn];
-
       diceFace.classList.add('dice-rolling');
       playRollSound();
 
@@ -859,10 +746,9 @@
 
       let targetPos = activeP.pos + rollValue;
       if (targetPos > 100) {
-        addLog(`${activeP.name} rolled ${rollValue}. Overshot 100! Stays at tile ${activeP.pos}.`);
+        addLog(`${activeP.name} rolled ${rollValue}. Overshot 100!`);
       } else {
-        addLog(`${activeP.name} rolled a ${rollValue}. Moving from ${activeP.pos} to ${targetPos}.`);
-
+        addLog(`${activeP.name} rolled ${rollValue}. Moved to ${targetPos}.`);
         while (activeP.pos < targetPos) {
           activeP.pos++;
           playStepSound(currentTurn);
@@ -881,32 +767,25 @@
 
       if (activeP.pos === 100) {
         playWinSound();
-        addLog(`🎉 CHAMPION! ${activeP.name} reached tile 100 in ${activeP.rolls} rolls!`, 'win');
+        addLog(`🎉 ${activeP.name} WON!`, 'win');
         victoryTitle.textContent = `${activeP.name} Wins!`;
-        victoryTitle.className = activeP.id === 1 ? 'text-2xl font-bold text-amber-300 mb-1' : 'text-2xl font-bold text-cyan-300 mb-1';
-        victoryMessage.textContent = `${activeP.name} reached tile 100 first in ${activeP.rolls} rolls!`;
+        victoryMessage.textContent = `${activeP.name} reached tile 100 in ${activeP.rolls} rolls!`;
         victoryModal.classList.remove('hidden');
         isMoving = false;
         return;
       }
 
-      if (currentTurn === 1) {
-        roundCount++;
-      }
+      if (currentTurn === 1) roundCount++;
       currentTurn = (currentTurn === 0) ? 1 : 0;
       updateTurnUI();
       updatePlayerVisuals();
 
       isMoving = false;
       rollBtn.disabled = false;
-      rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
 
       if (gameMode === 'ai' && currentTurn === 1) {
         rollBtn.disabled = true;
-        rollBtn.classList.add('opacity-50', 'cursor-not-allowed');
-        setTimeout(() => {
-          executeTurn();
-        }, 900);
+        setTimeout(() => executeTurn(), 900);
       }
     }
 
@@ -918,11 +797,10 @@
       totalRollsCount = 0;
       isMoving = false;
       diceFace.textContent = '⚀';
-      logContainer.innerHTML = '<div class="text-slate-500 italic">Game reset. Player 1, roll the dice!</div>';
+      logContainer.innerHTML = '<div class="text-slate-500 italic">Game reset. Player 1, roll!</div>';
       victoryModal.classList.add('hidden');
       flyingToken.classList.add('hidden');
       rollBtn.disabled = false;
-      rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
       updatePlayerVisuals();
       updateTurnUI();
     }
@@ -930,21 +808,21 @@
     function setGameMode(mode) {
       gameMode = mode;
       if (mode === 'pvp') {
-        modePvpBtn.className = 'px-2.5 py-1 rounded-md font-medium transition bg-indigo-600 text-white';
-        modeAiBtn.className = 'px-2.5 py-1 rounded-md font-medium transition text-slate-400 hover:text-white';
+        modePvpBtn.className = 'px-1.5 py-0.5 rounded-md font-medium transition bg-indigo-600 text-white';
+        modeAiBtn.className = 'px-1.5 py-0.5 rounded-md font-medium transition text-slate-400 hover:text-white';
         players[1].name = 'Player 2';
-        p2TitleTag.innerHTML = '<span class="w-2 h-2 rounded-full bg-cyan-400"></span> P2 (Cyan)';
+        p2TitleTag.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> P2';
         p2NameText.textContent = 'Player 2';
         p2AvatarBox.textContent = '♟2';
-        legendP2Text.textContent = 'Player 2 (P2)';
+        legendP2Text.textContent = 'P2';
       } else {
-        modeAiBtn.className = 'px-2.5 py-1 rounded-md font-medium transition bg-indigo-600 text-white';
-        modePvpBtn.className = 'px-2.5 py-1 rounded-md font-medium transition text-slate-400 hover:text-white';
+        modeAiBtn.className = 'px-1.5 py-0.5 rounded-md font-medium transition bg-indigo-600 text-white';
+        modePvpBtn.className = 'px-1.5 py-0.5 rounded-md font-medium transition text-slate-400 hover:text-white';
         players[1].name = 'Computer';
-        p2TitleTag.innerHTML = '<span class="w-2 h-2 rounded-full bg-cyan-400"></span> 🤖 Computer';
+        p2TitleTag.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> 🤖 AI';
         p2NameText.textContent = 'Computer';
         p2AvatarBox.textContent = '🤖';
-        legendP2Text.textContent = 'Computer (AI)';
+        legendP2Text.textContent = 'AI';
       }
       resetGame();
     }
@@ -976,19 +854,13 @@
 
       ladders = newLadders;
       snakes = newSnakes;
-      addLog('✨ Dynamic board updated with new snakes & ladders!', 'ladder');
+      addLog('✨ Board updated with new snakes & ladders!', 'ladder');
       renderBoard();
       resetGame();
     }
 
-    rollBtn.addEventListener('click', () => {
-      if (gameMode === 'ai' && currentTurn === 1) return;
-      executeTurn();
-    });
-    diceFace.addEventListener('click', () => {
-      if (gameMode === 'ai' && currentTurn === 1) return;
-      executeTurn();
-    });
+    rollBtn.addEventListener('click', () => { if (gameMode !== 'ai' || currentTurn === 0) executeTurn(); });
+    diceFace.addEventListener('click', () => { if (gameMode !== 'ai' || currentTurn === 0) executeTurn(); });
     resetBtn.addEventListener('click', resetGame);
     randomizeBtn.addEventListener('click', randomizeBoard);
     modalPlayAgainBtn.addEventListener('click', resetGame);
@@ -999,16 +871,10 @@
     soundToggle.addEventListener('click', () => {
       soundEnabled = !soundEnabled;
       soundIcon.textContent = soundEnabled ? '🔊' : '🔇';
-      soundText.textContent = soundEnabled ? 'Sound ON' : 'Muted';
     });
 
-    window.addEventListener('resize', () => {
-      drawBoardSvgs();
-    });
-
-    window.onload = () => {
-      renderBoard();
-    };
+    window.addEventListener('resize', () => drawBoardSvgs());
+    window.onload = () => renderBoard();
   </script>
 </body>
 </html>
