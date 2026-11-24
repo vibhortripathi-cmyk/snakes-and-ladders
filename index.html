@@ -39,6 +39,37 @@
       25% { transform: rotate(-12deg) scale(1.08); }
       75% { transform: rotate(12deg) scale(0.95); }
     }
+    .dice-outcome-pop {
+      animation: dicePop 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.75), 0 0 24px rgba(251, 191, 36, 0.55);
+    }
+    @keyframes dicePop {
+      0% { transform: scale(0.85); }
+      45% { transform: scale(1.32); }
+      75% { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+    .snake-hiss {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: hissThreat 0.42s ease-in-out infinite;
+      filter: drop-shadow(0 0 10px rgba(244, 63, 94, 0.9)) drop-shadow(0 0 18px rgba(251, 191, 36, 0.5));
+    }
+    @keyframes hissThreat {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      25% { transform: scale(1.08) rotate(-2deg); }
+      50% { transform: scale(1.12) rotate(2deg); }
+      75% { transform: scale(1.06) rotate(-1deg); }
+    }
+    .tongue-flick {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: tongueFlickAnim 0.35s ease-in-out infinite;
+    }
+    @keyframes tongueFlickAnim {
+      0%, 100% { opacity: 0.4; transform: scaleX(0.7); }
+      50% { opacity: 1; transform: scaleX(1.25); }
+    }
     .pulse-glow-ladder {
       filter: drop-shadow(0 0 10px #34d399) drop-shadow(0 0 20px #10b981);
       animation: ladderPulse 0.8s ease-in-out infinite alternate;
@@ -94,7 +125,6 @@
     .active-turn-ring-p2 {
       box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1), 0 0 16px rgba(6, 182, 212, 0.4);
     }
-    /* Slightly enlarged board wrapper size */
     .responsive-board-wrapper {
       width: min(94vw, 48dvh);
       height: min(94vw, 48dvh);
@@ -252,14 +282,22 @@
         </div>
       </div>
 
-      <!-- Dice Box -->
+      <!-- Dice Box with Magnified Roll Readout -->
       <div class="bg-slate-800/80 rounded-lg p-1.5 border border-slate-700 shadow flex items-center justify-between gap-2">
-        <div id="diceFace" class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-gradient-to-br from-white to-slate-200 text-slate-900 flex items-center justify-center text-xl font-black shadow cursor-pointer select-none border border-slate-300 shrink-0">
+        <div id="diceFace" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-white to-slate-200 text-slate-900 flex items-center justify-center text-2xl sm:text-3xl font-black shadow cursor-pointer select-none border-2 border-amber-300/70 shrink-0">
           ⚀
         </div>
-        <button id="rollBtn" class="flex-1 py-1.5 px-2 rounded-lg font-bold text-xs bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 shadow transition active:scale-[0.98]">
-          Roll Dice
-        </button>
+        <div class="flex flex-col flex-1 gap-1">
+          <div class="flex items-center justify-between px-1">
+            <span class="text-[8px] uppercase tracking-wider text-slate-400 font-semibold">Rolled</span>
+            <span id="diceValueBadge" class="px-1.5 py-0.2 rounded bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-black">
+              1
+            </span>
+          </div>
+          <button id="rollBtn" class="w-full py-1.5 px-2 rounded-lg font-bold text-xs bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 shadow transition active:scale-[0.98]">
+            Roll Dice
+          </button>
+        </div>
       </div>
 
       <!-- Event Log -->
@@ -330,6 +368,10 @@
       playBeep(playerIdx === 0 ? 520 : 640, 'sine', 0.09);
     }
 
+    function playHissWarningSound() {
+      playBeep(1900, 'sawtooth', 0.14, 0.05);
+    }
+
     function playLadderSound() {
       [392, 523, 659, 784, 1046].forEach((freq, idx) => {
         setTimeout(() => playBeep(freq, 'triangle', 0.22, 0.1), idx * 100);
@@ -349,12 +391,32 @@
       });
     }
 
+    // Weighted dice roll giving 6 a higher chance
+    function rollWeightedDice() {
+      const weights = [
+        { face: 1, weight: 1 },
+        { face: 2, weight: 1 },
+        { face: 3, weight: 1 },
+        { face: 4, weight: 1 },
+        { face: 5, weight: 1 },
+        { face: 6, weight: 2 } // Extra chance for 6
+      ];
+      const totalWeight = weights.reduce((sum, item) => sum + item.weight, 0);
+      let r = Math.random() * totalWeight;
+      for (const item of weights) {
+        if (r < item.weight) return item.face;
+        r -= item.weight;
+      }
+      return 6;
+    }
+
     // Game State
     let gameMode = 'pvp';
     let currentTurn = 0;
     let roundCount = 1;
     let totalRollsCount = 0;
     let isMoving = false;
+    let lastHissedHead = null;
 
     const players = [
       { id: 1, name: 'Player 1', pos: 1, color: 'amber', bgHex: '#f59e0b', rolls: 0 },
@@ -381,6 +443,7 @@
     const soundToggle = document.getElementById('soundToggle');
     const soundIcon = document.getElementById('soundIcon');
     const diceFace = document.getElementById('diceFace');
+    const diceValueBadge = document.getElementById('diceValueBadge');
     const logContainer = document.getElementById('logContainer');
     const turnCounter = document.getElementById('turnCounter');
     const totalRollsEl = document.getElementById('totalRolls');
@@ -492,7 +555,7 @@
         const len = Math.hypot(dx, dy);
         if (len === 0) return;
 
-        const waveAmp = Math.min(60, len * 0.22);
+        const waveAmp = Math.min(65, len * 0.24);
         const nx = (-dy / len) * waveAmp;
         const ny = (dx / len) * waveAmp;
 
@@ -505,12 +568,12 @@
 
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.id = `svg-snake-${head}`;
-        g.setAttribute('class', 'opacity-85 transition-all duration-300');
+        g.setAttribute('class', 'opacity-95 transition-all duration-300');
 
         const bodyOuter = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         bodyOuter.setAttribute('d', pathData);
         bodyOuter.setAttribute('stroke', '#e11d48');
-        bodyOuter.setAttribute('stroke-width', '16');
+        bodyOuter.setAttribute('stroke-width', '20');
         bodyOuter.setAttribute('fill', 'none');
         bodyOuter.setAttribute('stroke-linecap', 'round');
         g.appendChild(bodyOuter);
@@ -518,14 +581,104 @@
         const bodyInner = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         bodyInner.setAttribute('d', pathData);
         bodyInner.setAttribute('stroke', '#fbbf24');
-        bodyInner.setAttribute('stroke-width', '7');
+        bodyInner.setAttribute('stroke-width', '8');
         bodyInner.setAttribute('fill', 'none');
         bodyInner.setAttribute('stroke-linecap', 'round');
-        bodyInner.setAttribute('stroke-dasharray', '8 6');
+        bodyInner.setAttribute('stroke-dasharray', '9 6');
         g.appendChild(bodyInner);
 
+        // Detailed Snake Head Group
+        const headGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        headGroup.id = `snake-head-group-${head}`;
+        const angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
+        headGroup.setAttribute('transform', `translate(${p1.x}, ${p1.y}) rotate(${angleDeg})`);
+
+        // Forked flickering tongue pointing forward
+        const tongue = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        tongue.setAttribute('d', 'M 18 0 L 30 0 M 30 0 L 37 -6 M 30 0 L 37 6');
+        tongue.setAttribute('stroke', '#fb7185');
+        tongue.setAttribute('stroke-width', '3.5');
+        tongue.setAttribute('stroke-linecap', 'round');
+        tongue.setAttribute('fill', 'none');
+        tongue.setAttribute('class', 'tongue-flick');
+        headGroup.appendChild(tongue);
+
+        // Head shape
+        const headShape = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        headShape.setAttribute('cx', '2');
+        headShape.setAttribute('cy', '0');
+        headShape.setAttribute('rx', '21');
+        headShape.setAttribute('ry', '17');
+        headShape.setAttribute('fill', '#be123c');
+        headShape.setAttribute('stroke', '#fda4af');
+        headShape.setAttribute('stroke-width', '3.5');
+        headGroup.appendChild(headShape);
+
+        // Eyes
+        const eyeLeft = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        eyeLeft.setAttribute('cx', '6');
+        eyeLeft.setAttribute('cy', '-8');
+        eyeLeft.setAttribute('r', '4.5');
+        eyeLeft.setAttribute('fill', '#fef08a');
+        headGroup.appendChild(eyeLeft);
+
+        const eyeRight = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        eyeRight.setAttribute('cx', '6');
+        eyeRight.setAttribute('cy', '8');
+        eyeRight.setAttribute('r', '4.5');
+        eyeRight.setAttribute('fill', '#fef08a');
+        headGroup.appendChild(eyeRight);
+
+        // Pupils
+        const pupilLeft = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        pupilLeft.setAttribute('cx', '8');
+        pupilLeft.setAttribute('cy', '-8');
+        pupilLeft.setAttribute('r', '2');
+        pupilLeft.setAttribute('fill', '#090d16');
+        headGroup.appendChild(pupilLeft);
+
+        const pupilRight = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        pupilRight.setAttribute('cx', '8');
+        pupilRight.setAttribute('cy', '8');
+        pupilRight.setAttribute('r', '2');
+        pupilRight.setAttribute('fill', '#090d16');
+        headGroup.appendChild(pupilRight);
+
+        g.appendChild(headGroup);
         snakesGroup.appendChild(g);
       });
+
+      updateSnakeProximityHiss();
+    }
+
+    // Trigger hiss animation when active player arrives within 1-3 tiles ahead of a snake head
+    function updateSnakeProximityHiss() {
+      const activePos = players[currentTurn].pos;
+      let nearestHead = null;
+
+      Object.keys(snakes).forEach(headKey => {
+        const head = parseInt(headKey, 10);
+        const headGroup = document.getElementById(`snake-head-group-${head}`);
+        const distAhead = head - activePos;
+        const isNear = distAhead >= 1 && distAhead <= 3;
+
+        if (headGroup) {
+          if (isNear) {
+            headGroup.classList.add('snake-hiss');
+            if (nearestHead === null) nearestHead = head;
+          } else {
+            headGroup.classList.remove('snake-hiss');
+          }
+        }
+      });
+
+      if (nearestHead !== null && nearestHead !== lastHissedHead) {
+        lastHissedHead = nearestHead;
+        playHissWarningSound();
+        showActionToast('snake', `🐍 HSSSS! Snake head ahead at ${nearestHead}!`);
+      } else if (nearestHead === null) {
+        lastHissedHead = null;
+      }
     }
 
     function renderBoard() {
@@ -556,9 +709,9 @@
           }
 
           if (snakes[cellNum]) {
-            cell.classList.add('border', 'border-rose-500/60', 'bg-rose-950/40');
+            cell.classList.add('border-2', 'border-rose-500/80', 'bg-rose-950/50');
             const iconSpan = document.createElement('div');
-            iconSpan.className = 'absolute top-0.5 right-0.5 text-[7px] text-rose-400 font-bold select-none';
+            iconSpan.className = 'absolute top-0.5 right-0.5 text-[7px] text-rose-300 font-bold select-none';
             iconSpan.textContent = `🐍${snakes[cellNum]}`;
             cell.appendChild(iconSpan);
           }
@@ -618,6 +771,8 @@
 
       turnCounter.textContent = `Round ${roundCount}`;
       totalRollsEl.textContent = `· ${totalRollsCount} Roll${totalRollsCount === 1 ? '' : 's'}`;
+
+      updateSnakeProximityHiss();
     }
 
     function updateTurnUI() {
@@ -636,7 +791,7 @@
         turnBannerText.textContent = "P1's Turn (Amber)";
         turnSubText.textContent = 'Roll Dice';
 
-        rollBtn.className = 'flex-1 py-1.5 px-2 rounded-lg font-bold text-xs bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 shadow transition active:scale-[0.98]';
+        rollBtn.className = 'w-full py-1.5 px-2 rounded-lg font-bold text-xs bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 shadow transition active:scale-[0.98]';
         rollBtn.textContent = 'Roll Dice (Player 1)';
       } else {
         player2Card.classList.add('active-turn-ring-p2', 'border-cyan-400/80', 'bg-slate-800/90');
@@ -650,7 +805,7 @@
         turnBannerText.textContent = `${activeP.name}'s Turn`;
         turnSubText.textContent = (gameMode === 'ai') ? 'AI thinking...' : 'Roll Dice';
 
-        rollBtn.className = 'flex-1 py-1.5 px-2 rounded-lg font-bold text-xs bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 shadow transition active:scale-[0.98]';
+        rollBtn.className = 'w-full py-1.5 px-2 rounded-lg font-bold text-xs bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 shadow transition active:scale-[0.98]';
         rollBtn.textContent = (gameMode === 'ai') ? 'AI Rolling...' : 'Roll Dice (Player 2)';
       }
     }
@@ -730,17 +885,25 @@
       rollBtn.disabled = true;
 
       const activeP = players[currentTurn];
+      diceFace.classList.remove('dice-outcome-pop');
       diceFace.classList.add('dice-rolling');
       playRollSound();
 
-      let rollValue = 1;
       for (let i = 0; i < 6; i++) {
-        rollValue = Math.floor(Math.random() * 6) + 1;
-        diceFace.textContent = diceSymbols[rollValue - 1];
+        const previewVal = Math.floor(Math.random() * 6) + 1;
+        diceFace.textContent = diceSymbols[previewVal - 1];
+        diceValueBadge.textContent = previewVal;
         await new Promise(r => setTimeout(r, 60));
       }
 
+      const rollValue = rollWeightedDice();
       diceFace.classList.remove('dice-rolling');
+      diceFace.textContent = diceSymbols[rollValue - 1];
+      diceValueBadge.textContent = rollValue === 6 ? '6 ★' : rollValue;
+      void diceFace.offsetWidth;
+      diceFace.classList.add('dice-outcome-pop');
+      setTimeout(() => diceFace.classList.remove('dice-outcome-pop'), 700);
+
       activeP.rolls++;
       totalRollsCount++;
 
@@ -749,11 +912,12 @@
         addLog(`${activeP.name} rolled ${rollValue}. Overshot 100!`);
       } else {
         addLog(`${activeP.name} rolled ${rollValue}. Moved to ${targetPos}.`);
+        // 10% slower than 120ms = 132ms per tile
         while (activeP.pos < targetPos) {
           activeP.pos++;
           playStepSound(currentTurn);
           updatePlayerVisuals();
-          await new Promise(r => setTimeout(r, 120));
+          await new Promise(r => setTimeout(r, 132));
         }
 
         if (ladders[activeP.pos]) {
@@ -777,6 +941,7 @@
 
       if (currentTurn === 1) roundCount++;
       currentTurn = (currentTurn === 0) ? 1 : 0;
+      lastHissedHead = null;
       updateTurnUI();
       updatePlayerVisuals();
 
@@ -796,7 +961,9 @@
       roundCount = 1;
       totalRollsCount = 0;
       isMoving = false;
+      lastHissedHead = null;
       diceFace.textContent = '⚀';
+      diceValueBadge.textContent = '1';
       logContainer.innerHTML = '<div class="text-slate-500 italic">Game reset. Player 1, roll!</div>';
       victoryModal.classList.add('hidden');
       flyingToken.classList.add('hidden');
