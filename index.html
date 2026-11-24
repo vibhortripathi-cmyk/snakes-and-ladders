@@ -397,8 +397,9 @@
       { id: 2, name: 'Player 2', pos: 1, color: 'cyan', bgHex: '#06b6d4', rolls: 0 }
     ];
 
-    let ladders = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91 };
-    let snakes = { 17: 7, 54: 34, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78 };
+    // 7 ladders and 7 snakes for a cleaner, less cluttered board
+    let ladders = { 4: 14, 9: 31, 20: 38, 28: 84, 51: 67, 63: 81, 71: 91 };
+    let snakes = { 17: 7, 54: 34, 62: 19, 87: 24, 93: 73, 95: 75, 99: 78 };
     const diceSymbols = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
     // Elements
@@ -999,7 +1000,7 @@
       const newSnakes = {};
       const usedTiles = new Set([1, 100]);
 
-      while (Object.keys(newLadders).length < 7) {
+      while (Object.keys(newLadders).length < 6) {
         const bottom = Math.floor(Math.random() * 75) + 3;
         const top = bottom + Math.floor(Math.random() * 20) + 8;
         if (top < 100 && !usedTiles.has(bottom) && !usedTiles.has(top)) {
@@ -1009,7 +1010,7 @@
         }
       }
 
-      while (Object.keys(newSnakes).length < 7) {
+      while (Object.keys(newSnakes).length < 6) {
         const head = Math.floor(Math.random() * 75) + 24;
         const tail = head - Math.floor(Math.random() * 20) - 8;
         if (tail > 1 && !usedTiles.has(head) && !usedTiles.has(tail)) {
